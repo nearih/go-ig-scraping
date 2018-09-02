@@ -29,27 +29,37 @@ type pageInfo struct {
 type entryNode struct {
 	EntryData struct {
 		ProfilePage []struct {
-			User struct {
-				ID    string `json:"id"`
-				Media struct {
-					Nodes []struct {
-						ImageURL     string `json:"display_url"`
-						ThumbnailURL string `json:"thumbnail_src"`
-						IsVideo      bool   `json:"is_video"`
-						Date         int    `json:"date"`
-						Dimensions   struct {
-							Width  int `json:"width"`
-							Height int `json:"height"`
-						} `json:"dimensions"`
-						Likes struct {
-							Count int `json:"count"`
-						} `json:"edge_liked_by"`
-					} `json:"node"`
-					PageInfo pageInfo `json:"page_info"`
-				} `json:"edge_owner_to_timeline_media"`
-			} `json:"user"`
+			Graphql struct {
+				User struct {
+					ID    string `json:"id"`
+					Media struct {
+						Nodes []struct {
+							ImageURL     string `json:"display_url"`
+							ThumbnailURL string `json:"thumbnail_src"`
+							IsVideo      bool   `json:"is_video"`
+							Date         int    `json:"date"`
+							Dimensions   struct {
+								Width  int `json:"width"`
+								Height int `json:"height"`
+							} `json:"dimensions"`
+							Likes struct {
+								Count int `json:"count"`
+							} `json:"edge_liked_by"`
+						} `json:"node"`
+						PageInfo pageInfo `json:"page_info"`
+					} `json:"edge_owner_to_timeline_media"`
+				} `json:"user"`
+			} `json:"graphql"`
 		} `json:"ProfilePage"`
 	} `json:"entry_data"`
+}
+
+type entryData struct {
+	EntryData string `json:"entry_data"`
+}
+
+type locale struct {
+	Locale string `json:"locale"`
 }
 
 // Structure - next entry
@@ -92,20 +102,37 @@ func main() {
 
 	c.OnHTML("body > script:first-of-type", func(e *colly.HTMLElement) {
 		jsonData := e.Text[strings.Index(e.Text, "{") : len(e.Text)-1]
+		fmt.Println("")
+		fmt.Println("")
 		data := entryNode{}
+		data2 := entryData{}
+		locale := locale{}
 
 		err := json.Unmarshal([]byte(jsonData), &data)
 		if err != nil {
 
+			log.Fatal("97	", err)
+		}
+
+		err = json.Unmarshal([]byte(jsonData), &data2)
+		if err != nil {
+
 			log.Fatal("98	", err)
 		}
-		jsonData = "[" + jsonData + "]"
+		err = json.Unmarshal([]byte(jsonData), &locale)
+		if err != nil {
+
+			log.Fatal("99	", err)
+		}
+		// jsonData = "[" + jsonData + "]"
 		// jsonByte, err := json.Marshal(jsonData)
 		// if err != nil {
 		// 	log.Fatal("103	", err)
 		// }
 		fmt.Println("")
 		fmt.Println("data	", data)
+		fmt.Println("data2	", data2)
+		fmt.Println("locale	", locale)
 		fmt.Println("")
 		// fmt.Println("jsonData	", jsonData)
 		fmt.Println("")
