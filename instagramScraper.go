@@ -33,19 +33,22 @@ type entryNode struct {
 				User struct {
 					ID    string `json:"id"`
 					Media struct {
-						Nodes []struct {
-							ImageURL     string `json:"display_url"`
-							ThumbnailURL string `json:"thumbnail_src"`
-							IsVideo      bool   `json:"is_video"`
-							Date         int    `json:"date"`
-							Dimensions   struct {
-								Width  int `json:"width"`
-								Height int `json:"height"`
-							} `json:"dimensions"`
-							Likes struct {
-								Count int `json:"count"`
-							} `json:"edge_liked_by"`
-						} `json:"node"`
+						Edges []struct {
+							Nodes struct {
+								ID           string `json:"id"`
+								ImageURL     string `json:"display_url"`
+								ThumbnailURL string `json:"thumbnail_src"`
+								IsVideo      bool   `json:"is_video"`
+								Date         int    `json:"date"`
+								Dimensions   struct {
+									Width  int `json:"width"`
+									Height int `json:"height"`
+								} `json:"dimensions"`
+								Likes struct {
+									Count int `json:"count"`
+								} `json:"edge_liked_by"`
+							} `json:"node"`
+						} `json:"edges"`
 						PageInfo pageInfo `json:"page_info"`
 					} `json:"edge_owner_to_timeline_media"`
 				} `json:"user"`
@@ -55,7 +58,7 @@ type entryNode struct {
 }
 
 type entryData struct {
-	EntryData string `json:"entry_data"`
+	EntryData struct{} `json:"entry_data"`
 }
 
 type locale struct {
@@ -70,6 +73,7 @@ type entryEdgeNode struct {
 				PageInfo pageInfo `json:"page_info"`
 				Edges    []struct {
 					Node struct {
+						ID           string `json:"id"`
 						ImageURL     string `json:"display_url"`
 						ThumbnailURL string `json:"thumbnail_src"`
 						IsVideo      bool   `json:"is_video"`
@@ -80,8 +84,8 @@ type entryEdgeNode struct {
 						}
 						Likes struct {
 							Count int `json:"count"`
-						} `json:"edge_media_preview_like"`
-					}
+						} `json:"edge_liked_by"`
+					} `json:"node"`
 				} `json:"edges"`
 			} `json:"edge_owner_to_timeline_media"`
 		}
@@ -130,9 +134,9 @@ func main() {
 		// 	log.Fatal("103	", err)
 		// }
 		fmt.Println("")
-		fmt.Println("data	", data)
-		fmt.Println("data2	", data2)
-		fmt.Println("locale	", locale)
+		fmt.Printf("data	%+v \n", data)
+		fmt.Printf("data2	%+v \n", data2)
+		fmt.Printf("locale	%+v \n", locale)
 		fmt.Println("")
 		// fmt.Println("jsonData	", jsonData)
 		fmt.Println("")
@@ -143,17 +147,17 @@ func main() {
 			fmt.Println("111	", err)
 		}
 		page := data.EntryData.ProfilePage[0]
-		actualUserID = page.User.ID
-		for _, obj := range page.User.Media.Nodes {
-			if obj.IsVideo {
+		actualUserID = page.Graphql.User.ID
+		for _, obj := range page.Graphql.User.Media.Edges {
+			if obj.Nodes.IsVideo {
 				continue
 			}
-			newStat := []string{filepath.Base(obj.ImageURL), fmt.Sprintf("%v", obj.Likes.Count)}
+			newStat := []string{filepath.Base(obj.Nodes.ImageURL), fmt.Sprintf("%v", obj.Nodes.Likes.Count)}
 			statData = append(statData, newStat)
-			c.Visit(obj.ImageURL)
+			c.Visit(obj.Nodes.ImageURL)
 		}
-		if page.User.Media.PageInfo.NextPage {
-			c.Visit(fmt.Sprintf(nextPageURLTemplate, actualUserID, page.User.Media.PageInfo.EndCursor))
+		if page.Graphql.User.Media.PageInfo.NextPage {
+			c.Visit(fmt.Sprintf(nextPageURLTemplate, actualUserID, page.Graphql.User.Media.PageInfo.EndCursor))
 		}
 	})
 
